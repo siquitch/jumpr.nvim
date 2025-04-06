@@ -11,6 +11,8 @@ local cache_dir = vim.fn.stdpath("data") .. "/jumpr/"
 
 ---@alias jumpr.Table table<string, jumpr.File>
 
+---@alias jumpr.JumpTable table<string, jumpr.File>
+
 local function init_dir() vim.fn.mkdir(cache_dir, "p") end
 
 ---@param dir string
@@ -39,7 +41,6 @@ local function get_cache()
   local path = get_cache_file()
   ---@type table
   local data = path:read()
-
   local cache = vim.fn.json_decode(data)
   return cache
 end
@@ -65,9 +66,25 @@ local function remove(file)
   save(cache)
 end
 
+---@param cache jumpr.Table
+---@return jumpr.JumpTable
+local function create_jump_table(cache)
+  local chars = "abcdefgh"
+  local count = 1
+  ---@type jumpr.JumpTable
+  local jt = {}
+  for _, file in pairs(cache) do
+    local char = chars.sub(chars, count, count)
+    jt[char] = file
+    count = count + 1
+  end
+  return jt
+end
+
 -- Show saved paths
 local function show()
   local cache = get_cache()
+  local jt = create_jump_table(cache)
   local keys = {}
   for key, _ in pairs(cache) do
     table.insert(keys, key)
